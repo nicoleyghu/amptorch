@@ -14,8 +14,11 @@ import scipy.sparse as sparse
 from collections import OrderedDict
 import ase
 from amptorch.gaussian import make_symmetry_functions, SNN_Gaussian
+<<<<<<< HEAD
 from amptorch.fp_simple_nn import make_amp_descriptors_simple_nn
+=======
 from amptorch.data_utils import Transform
+>>>>>>> 14345b1d354f8cbc49f578100b0da6ca9bea48f5
 from amptorch.utils import (
     calculate_fingerprints_range,
     hash_images,
