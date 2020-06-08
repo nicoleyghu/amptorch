@@ -14,8 +14,8 @@ import scipy.sparse as sparse
 from collections import OrderedDict
 import ase
 from amptorch.gaussian import make_symmetry_functions, SNN_Gaussian
+from amptorch.fp_simple_nn import make_amp_descriptors_simple_nn
 from amptorch.utils import (
-    make_amp_descriptors_simple_nn,
     calculate_fingerprints_range,
     hash_images,
     get_hash,
@@ -109,9 +109,9 @@ class AtomsDataset(Dataset):
         # create simple_nn fingerprints
         if descriptor == SNN_Gaussian:
             self.hashed_images = hash_images(self.atom_images, Gs=Gs)
-            make_amp_descriptors_simple_nn(
-                self.atom_images, Gs, self.elements, cores=cores, label=label
-            )
+            # make_amp_descriptors_simple_nn(
+            #     self.atom_images, Gs, self.elements, forcetraining=False, cores=cores, label=label, save=True
+            # )
             self.isamp_hash = False
         else:
             self.hashed_images = amp_hash(self.atom_images)
@@ -530,10 +530,13 @@ class TestDataset(Dataset):
                 self.atom_images,
                 Gs,
                 self.training_unique_atoms,
+                forcetraining=False,
                 cores=cores,
                 label=label,
                 save=False,
             )
+        if self.fp_primes == None:
+            self.fp_primes = {}
         self.unique_atoms = self.unique()
 
     def __len__(self):
