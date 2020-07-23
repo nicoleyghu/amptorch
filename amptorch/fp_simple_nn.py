@@ -30,19 +30,17 @@ def make_amp_descriptors_simple_nn(atoms, Gs, elements, forcetraining, cores, la
         cores (int for multithreading, default = 1)
         label (str)
         save (boolean, default = True)
-            if set to True, return None, None, but saved the files. 
+            if set to True, return None, None, but saved the files for data-feteching called upon AMPTorch. 
             if set to False, return fps, and fp_primes. 
     """
-    calculated = False
-    if save is False and calculated is False:
-        fps, fp_primes = stored_fps(atoms, Gs, forcetraining=forcetraining)
-        return fps, fp_primes
     traj, calculated, cffi_out = make_simple_nn_fps(atoms, Gs, elements=elements,
-            label=label)
-    if calculated is True and save is False:
+            label=label)        
+    if save is True:
         fps, fp_primes = convert_simple_nn_fps(traj, Gs, cffi_out, forcetraining, cores, save=save)
         return fps, fp_primes
-    else: return None, None
+    else:
+        fps, fp_primes = stored_fps(atoms, Gs, forcetraining=forcetraining)
+        return fps, fp_primes
 
 def make_simple_nn_fps(traj, Gs, label, elements="all"):
     """
@@ -215,8 +213,8 @@ def wrap_symmetry_functions(atoms, params_set):
     cell_p  = _gen_2Darray_for_ffi(cell, ffi)
 
     for j,jtem in enumerate(params_set.keys()):
-        q = type_num[jtem]
-        r = type_num[jtem] 
+        # q = type_num[jtem]
+        # r = type_num[jtem] 
 
         cal_atoms = np.asarray(type_idx[jtem][:], dtype=np.intc, order='C')
         cal_num = len(cal_atoms)
