@@ -82,6 +82,7 @@ class AtomsDataset(Dataset):
         self.Gs = Gs
         self.atom_images = self.images
         self.forcetraining = forcetraining
+        self.label = label
         self.store_primes = store_primes
         self.cores = cores
         self.delta = False
@@ -149,7 +150,9 @@ class AtomsDataset(Dataset):
         num_of_atoms = np.array([])
         forces_dataset = []
         index_hashes = []
-        self.fp_length = self.fp_length()
+        # updated for 'update_descriptor' method as sub-feature for subsampling
+        if type(self.fp_length) is not int:
+            self.fp_length = self.fp_length()
         rearange_forces = {}
         n = 0
         for index, atoms_object in enumerate(self.atom_images):
@@ -328,6 +331,64 @@ class AtomsDataset(Dataset):
         samplers = {"train": train_sampler, "val": val_sampler}
 
         return samplers
+    
+    def subsample(self, cutoff_sig=0.1, rate=0.5, method='pykdtree', pca_target_variance=None):
+        from lammps_interface.customizedNNSubsampling import subsampling, subsampling_with_PCA
+        # obtain fingerprints in amp's format by reading all data
+        fps = self.fingerprint_dataset
+        # reorganize fps into n_central_atoms_each_frame * k_fingerprints)
+        fps_reorganized = []
+        index_list = []
+        # iterate over frames
+        for i, tmp in enumerate(fps):
+            for _, fp in tmp:
+                    fps_reorganized.append(fp)
+                    index_list.append(i)
+        fps_array = np.asarray(fps_reorganized)
+        print(fps_array.shape)
+        
+        # call subsampling algorithm to obtain indexes to keep
+        _, idx_keep = subsampling(fps_array, image_index=index_list, \
+                                    cutoff_sig=cutoff_sig, \
+                                    rate=rate, method=method)
+        # if pca_target_variance is None:
+        #     _, idx_keep = subsampling(fps_array, image_index=index_list, \
+        #                             cutoff_sig=cutoff_sig, \
+        #                             rate=rate, method=method)
+        # else:
+        #     _, idx_keep = subsampling_with_PCA(fps_array, image_index=index_list, \
+        #                                     cutoff_sig=cutoff_sig, rate=rate, \
+        #                                     method=method, \
+        #                                     target_variance=pca_target_variance)
+        del _
+        # remove duplicates
+        idx_keep = list(set(idx_keep))
+        # obtain images to keep
+        images_keep = [self.images[_] for _ in idx_keep]
+        print(len(images_keep))
+        # return new AtomsDataset with only selected images
+        self.update_descriptor(images_keep)
+        return images_keep, idx_keep
+    
+    def update_descriptor(self, images):
+        # No update on Gs
+        self.atom_images = images
+        print("Re-calculating fingerprints...")
+        # TODO only works for SNN_Gaussian type fingerprint class
+        self.hashed_images = hash_images(self.atom_images, Gs=self.Gs)
+        # make_amp_descriptors_simple_nn(
+        #     self.atom_images, Gs, self.elements, forcetraining=False, cores=cores, label=label, save=True
+        # )
+        self.isamp_hash = False
+        self.descriptor.calculate_fingerprints(
+            self.hashed_images, calculate_derivatives=self.forcetraining
+        )
+        print("Fingerprints Re-calculated!")
+        self.fprange = calculate_fingerprints_range(self.descriptor, self.hashed_images)
+        # perform preprocessing
+        self.fingerprint_dataset, self.energy_dataset, self.num_of_atoms, self.sparse_fprimes, self.forces_dataset, self.index_hashes, self.scalings, self.rearange_forces = (
+            self.preprocess_data()
+        )
 
 
 def make_sparse(primes):
