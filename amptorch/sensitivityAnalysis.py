@@ -151,18 +151,24 @@ def subsample_analysis(calc, images_train, label, images_whole=None, images_test
                     # print set RMSE
                     rmse = np.sqrt(((targets - preds)**2).sum()/len(preds))
                     rmse_dict['rmse_whole'] = rmse
+                    max_abs_err = np.amax(np.absolute(targets - preds))
+                    rmse_dict['maxErr_whole'] = max_abs_err
                     print('Energy RMSE of the whole dataset = {:.4f} eV per atom.'.format(rmse))
                 elif images_collect == images_train:
                     ax.scatter(targets, preds, marker='o', s=7, alpha=.4, label=labels[1])
                     # print set RMSE
                     rmse = np.sqrt(((targets - preds)**2).sum()/len(preds))
                     rmse_dict['rmse_train'] = rmse
+                    max_abs_err = np.amax(np.absolute(targets - preds))
+                    rmse_dict['maxErr_train'] = max_abs_err
                     print('Energy RMSE of subsampled training set = {:.4f} eV per atom.'.format(rmse))
                 elif images_collect == images_test:
                     ax.scatter(targets, preds, marker='o', s=7, alpha=.4, label=labels[2])
                     # print set RMSE
                     rmse = np.sqrt(((targets - preds)**2).sum()/len(preds))
                     rmse_dict['rmse_test'] = rmse
+                    max_abs_err = np.amax(np.absolute(targets - preds))
+                    rmse_dict['maxErr_test'] = max_abs_err
                     print('Energy RMSE of test set = {:.4f} eV per atom.'.format(rmse)) 
         ymin, ymax = ax.get_ylim()
         xmin, xmax = ax.get_xlim()
