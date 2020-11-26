@@ -2,7 +2,6 @@ import numpy as np
 from ase import Atoms
 from ase.calculators.emt import EMT
 
-from amptorch.ase_utils import AMPtorch
 from amptorch.trainer import AtomsTrainer
 
 distances = np.linspace(2, 5, 10)
@@ -22,23 +21,32 @@ for dist in distances:
     images.append(image)
 
 
-Gs = {
-    "default": {
-        "G2": {
-            "etas": np.logspace(np.log10(0.05), np.log10(5.0), num=4),
-            "rs_s": [0],
-        },
-        "G4": {"etas": [0.005], "zetas": [1.0, 4.0], "gammas": [1.0, -1.0]},
-        "cutoff": 6,
+sigmas = np.logspace(np.log10(0.02), np.log10(1.0), num=5)
+MCSHs = {
+    "MCSHs": {
+        "0": {"groups": [1], "sigmas": sigmas},
+        "1": {"groups": [1], "sigmas": sigmas},
+        "2": {"groups": [1, 2], "sigmas": sigmas},
+        "3": {"groups": [1, 2, 3], "sigmas": sigmas},
+        "4": {"groups": [1, 2, 3, 4], "sigmas": sigmas},
+        "5": {"groups": [1, 2, 3, 4, 5], "sigmas": sigmas},
+        "6": {"groups": [1, 2, 3, 4, 5, 6, 7], "sigmas": sigmas},
     },
+    "atom_gaussians": {
+        "C": "./MCSH_potential/C_totaldensity_4.g",
+        "O": "./MCSH_potential/O_totaldensity_5.g",
+        "Cu": "./MCSH_potential/Cu_totaldensity_6.g",
+    },
+    "cutoff": 8,
 }
+
 
 elements = ["Cu", "C", "O"]
 config = {
-    "model": {"get_forces": True, "num_layers": 3, "num_nodes": 5},
+    "model": {"get_forces": False, "num_layers": 3, "num_nodes": 20},
     "optim": {
         "device": "cpu",
-        "force_coefficient": 0.04,
+        "force_coefficient": 0.0,
         "lr": 1e-2,
         "batch_size": 10,
         "epochs": 100,
@@ -47,7 +55,8 @@ config = {
         "raw_data": images,
         "val_split": 0,
         "elements": elements,
-        "fp_params": Gs,
+        "fp_scheme": "mcsh",
+        "fp_params": MCSHs,
         "save_fps": True,
     },
     "cmd": {
@@ -56,7 +65,7 @@ config = {
         "seed": 1,
         "identifier": "test",
         "verbose": True,
-        # "logger": True,
+        "logger": False,
     },
 }
 
@@ -69,6 +78,3 @@ true_energies = np.array([image.get_potential_energy() for image in images])
 pred_energies = np.array(predictions["energy"])
 
 print("Energy MSE:", np.mean((true_energies - pred_energies) ** 2))
-
-image.set_calculator(AMPtorch(trainer))
-image.get_potential_energy()
