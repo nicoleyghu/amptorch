@@ -20,7 +20,7 @@ def loss_curve(
     # generate directory to save files if not already
     if not os.path.exists("results/plots/loss_curve"):
         os.makedirs("results/plots/loss_curve")
-    hist = net.history
+    hist = trainer.history
     fig, ax = plt.subplots(figsize=(6.0, 6.0))
     for _ in loss_critera:
         xs = hist[:, "epoch"]
@@ -155,7 +155,7 @@ def subsample_analysis(
         os.makedirs("results/plots/test_split")
     # sort out customized legend definitions
     if legend == None:
-        labels = ["whole", "train", "test"]
+        labels = ["train", "test", "whole"]
     else:
         labels = legend
 
@@ -176,7 +176,7 @@ def subsample_analysis(
                 preds = np.asarray(preds)
                 if images_collect == images_whole:
                     ax.scatter(
-                        targets, preds, marker="v", s=7, alpha=0.4, label=labels[0]
+                        targets, preds, marker="v", s=7, alpha=0.4, label=labels[2]
                     )
                     # print set RMSE
                     rmse = np.sqrt(((targets - preds) ** 2).sum() / len(preds))
@@ -190,7 +190,7 @@ def subsample_analysis(
                     )
                 elif images_collect == images_train:
                     ax.scatter(
-                        targets, preds, marker="o", s=7, alpha=0.4, label=labels[1]
+                        targets, preds, marker="o", s=7, alpha=0.4, label=labels[0]
                     )
                     # print set RMSE
                     rmse = np.sqrt(((targets - preds) ** 2).sum() / len(preds))
@@ -204,7 +204,7 @@ def subsample_analysis(
                     )
                 elif images_collect == images_test:
                     ax.scatter(
-                        targets, preds, marker="o", s=7, alpha=0.4, label=labels[2]
+                        targets, preds, marker="o", s=7, alpha=0.4, label=labels[1]
                     )
                     # print set RMSE
                     rmse = np.sqrt(((targets - preds) ** 2).sum() / len(preds))
@@ -221,7 +221,7 @@ def subsample_analysis(
         ax.set_ylabel("AMPTorch energy, eV/atom")
         ax.set_title("Energies")
         ax.legend()
-        fig.savefig("results/plots/test_split/parity_E_" + label + "_subsample.pdf")
+        fig.savefig("results/plots/test_split/parity_E_" + label + ".pdf")
 
         print("Finished.")
 
