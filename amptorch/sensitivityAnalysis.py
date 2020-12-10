@@ -148,7 +148,8 @@ def subsample_analysis(
     # from single piont calculator
     images_train = copy.deepcopy(images_train)
     images_test = copy.deepcopy(images_test)
-    images_whole = copy.deepcopy(images_whole)
+    if images_whole is not None:
+        images_whole = copy.deepcopy(images_whole)
 
     # generate directory to save files if not already
     if not os.path.exists("results/plots/test_split"):
@@ -198,7 +199,7 @@ def subsample_analysis(
                     max_abs_err = np.amax(np.absolute(targets - preds))
                     rmse_dict["maxErr_train"] = max_abs_err
                     print(
-                        "Energy RMSE of subsampled training set = {:.4f} eV per atom.".format(
+                        "Energy RMSE of training set = {:.4f} eV per atom.".format(
                             rmse
                         )
                     )
