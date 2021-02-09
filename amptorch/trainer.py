@@ -105,6 +105,11 @@ class AtomsTrainer:
             self.cutoff_params,
             self.elements,
         )
+        
+        sampling_setup = {
+            self.config["dataset"].get("sampling_method", None),
+            self.config["dataset"].get("sampling_params", None)
+        }
         self.train_dataset = AtomsDataset(
             images=training_images,
             descriptor_setup=descriptor_setup,
@@ -112,8 +117,8 @@ class AtomsTrainer:
             pca_reduce = self.pca_reduce,
             pca_setting = self.config["dataset"].get(
                 "pca_setting",
-                {"num_pc": 20, "elementwise": False, "normalize": False}
-            }
+                {"num_pc": 20, "elementwise": False, "normalize": False}),
+            sampling_setup = sampling_setup,
             save_fps=self.config["dataset"].get("save_fps", True),
             scaling=self.config["dataset"].get(
                 "scaling",
@@ -124,6 +129,7 @@ class AtomsTrainer:
         self.target_scaler = self.train_dataset.target_scaler
         if self.pca_reduce:
             self.pca_reducer = self.train_dataset.pca_reducer
+        # TODO: add sampling identifier
         self.input_dim = self.train_dataset.input_dim
         self.val_split = self.config["dataset"].get("val_split", 0)
         if not self.debug:
@@ -141,6 +147,12 @@ class AtomsTrainer:
             torch.save(self.config, os.path.join(self.cp_dir, "config.pt"))
         print("Loading dataset: {} images".format(len(self.train_dataset)))
 
+    def load_sampler(self):
+        sampling_method = self.config["dataset"].get("sampling_method")
+        sampling_params = self.config["dataset"].get("sampling_params")
+        sampler_setup = sampling_method, sampling_params
+        construct_sampler(self.train_dataset, sampler_setup)
+    
     def load_model(self):
         elements = list_symbols_to_indices(self.elements)
         model = self.config["model"].get("name", "bpnn").lower()

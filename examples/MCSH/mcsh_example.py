@@ -33,11 +33,15 @@ MCSHs = {
         "6": {"groups": [1, 2, 3, 4, 5, 6, 7], "sigmas": sigmas},
     },
     "atom_gaussians": {
-        "C": "./MCSH_potential/C_totaldensity_4.g",
-        "O": "./MCSH_potential/O_totaldensity_5.g",
-        "Cu": "./MCSH_potential/Cu_totaldensity_6.g",
+        "C": "./C_totaldensity_4.g",
+        "O": "./O_totaldensity_5.g",
+        "Cu": "./Cu_totaldensity_6.g",
     },
     "cutoff": 8,
+}
+
+random_sampling = {
+    "number": 1000
 }
 
 
@@ -58,6 +62,8 @@ config = {
         "fp_scheme": "mcsh",
         "fp_params": MCSHs,
         "save_fps": True,
+        "sampling_method": "random",
+        "sampling_params": random_sampling, 
     },
     "cmd": {
         "debug": False,

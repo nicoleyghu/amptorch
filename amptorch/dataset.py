@@ -11,6 +11,8 @@ from amptorch.preprocessing import (
     sparse_block_diag,
 )
 
+# from amptorch.sampler import construct_sampler
+
 
 class AtomsDataset(Dataset):
     def __init__(
@@ -20,6 +22,7 @@ class AtomsDataset(Dataset):
         forcetraining=True,
         pca_reduce = False,
         pca_setting = {"num_pc": 20, "elementwise": False, "normalize": False},
+        sampling_setup = None, 
         save_fps=True,
         scaling={"type": "normalize", "range": (0, 1)},
         cores=1,
@@ -29,6 +32,7 @@ class AtomsDataset(Dataset):
         self.forcetraining = forcetraining
         self.pca_reduce = pca_reduce
         self.pca_setting = pca_setting
+        # self.sampling_method, self.samping_params = sampling_setup
         self.scaling = scaling
         self.descriptor = construct_descriptor(descriptor_setup)
 
@@ -42,6 +46,10 @@ class AtomsDataset(Dataset):
         )
 
         self.data_list = self.process() if process else None
+        # print(self.data_list)
+        # # sampling
+        # if self.sampling_method is not None:
+        #     construct_sampler(self.data_list, self.sampling_method, self.samping_params)
 
     def process(self):
         data_list = self.a2d.convert_all(self.images)
