@@ -11,8 +11,8 @@ from amptorch.preprocessing import (
     sparse_block_diag,
 )
 
-# from amptorch.sampler import construct_sampler
-
+from amptorch.sampler.NearestNeighbor import NearestNeighbor
+from amptorch.sampler.Random import Random
 
 class AtomsDataset(Dataset):
     def __init__(
@@ -22,7 +22,7 @@ class AtomsDataset(Dataset):
         forcetraining=True,
         pca_reduce = False,
         pca_setting = {"num_pc": 20, "elementwise": False, "normalize": False},
-        sampling_setup = None, 
+        sampling = {"sampling_method": None, "sampling_params": None},
         save_fps=True,
         scaling={"type": "normalize", "range": (0, 1)},
         cores=1,
@@ -32,7 +32,7 @@ class AtomsDataset(Dataset):
         self.forcetraining = forcetraining
         self.pca_reduce = pca_reduce
         self.pca_setting = pca_setting
-        # self.sampling_method, self.samping_params = sampling_setup
+        self.sampling = sampling
         self.scaling = scaling
         self.descriptor = construct_descriptor(descriptor_setup)
 
@@ -46,10 +46,24 @@ class AtomsDataset(Dataset):
         )
 
         self.data_list = self.process() if process else None
-        # print(self.data_list)
-        # # sampling
-        # if self.sampling_method is not None:
-        #     construct_sampler(self.data_list, self.sampling_method, self.samping_params)
+        # sampling
+        if self.sampling is not None:
+            sampling_method = sampling.get("sampling_method", None)
+            sampling_params = sampling.get("sampling_params", None)
+            sampling_save = sampling.get("save", False)
+            if sampling_method == "random":
+                self.data_list = \
+                    Random(self.data_list, sampling_params, \
+                        self.images, self.descriptor.descriptor_setup_hash, \
+                        save=sampling_save).run()
+            elif sampling_method == "nns":
+                self.data_list = \
+                    NearestNeighbor(self.data_list, sampling_params, \
+                        self.images, descriptor_setup, \
+                        save=sampling_save).run()
+            else:
+                raise NotImplementedError
+            
 
     def process(self):
         data_list = self.a2d.convert_all(self.images)
