@@ -334,6 +334,7 @@ def subsampling_with_PCA(
     target_variance=0.999999,
     method="pykdtree",
     verbose=1,
+    image_index=[],
 ):
 
     """
@@ -426,10 +427,12 @@ def subsampling_with_PCA(
         rate=rate,
         method=method,
         verbose=verbose,
+        image_index=image_index,
     )
 
-    sampling_result = [data[i] for i in overall_keep_list]
-    return sampling_result
+    sampling_result = [data_pca[i] for i in overall_keep_list]
+    image_index_result = [image_index[i] for i in overall_keep_list]
+    return sampling_result, image_index_result
 
 
 def batch_subsampling(

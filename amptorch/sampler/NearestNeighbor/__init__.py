@@ -1,5 +1,5 @@
 from ..base_sampler import BaseSampler
-from ..subsampling import subsampling
+from ..subsampling import subsampling_with_PCA
 
 import hashlib
 import numpy as np
@@ -18,6 +18,7 @@ class NearestNeighbor(BaseSampler):
         self.cutoff = self.sampling_params.get("cutoff")
         self.rate = self.sampling_params.get("rate")
         self.method = self.sampling_params.get("method", "pykdtree")
+        self.target_variance = self.sampling_params.get("target_variance", 0.999999)
 
         self.get_images_hash()
         self.get_sampler_setup_hash()
@@ -32,11 +33,12 @@ class NearestNeighbor(BaseSampler):
         total_length = len(self.data_list)
         print("Before sampling: {} images.".format(total_length))
 
-        _, image_indices = subsampling(
+        _, image_indices = subsampling_with_PCA(
             self.fps_array,
             image_index=self.index_list, 
             cutoff_sig=self.cutoff,
             rate = self.rate,
+            target_variance=self.target_variance,
             method = self.method, 
         )
         

@@ -100,7 +100,6 @@ class AtomsTrainer:
                 "elements", self.get_unique_elements(training_images)
             )
 
-<<<<<<< HEAD
         self.forcetraining = self.config["model"].get("get_forces", True)
         self.pca_reduce = self.config["model"].get("pca_reduce", False)
         self.fp_scheme = self.config["dataset"].get("fp_scheme", "gaussian").lower()
@@ -133,37 +132,6 @@ class AtomsTrainer:
                 {"type": "normalize", "range": (0, 1), "elementwise": True},
             ),
         )
-=======
-            self.forcetraining = self.config["model"].get("get_forces", True)
-            self.pca_reduce = self.config["dataset"].get("pca_reduce", False)
-            self.fp_scheme = self.config["dataset"].get("fp_scheme", "gaussian").lower()
-            self.fp_params = self.config["dataset"]["fp_params"]
-            self.save_fps = self.config["dataset"].get("save_fps", True)
-            self.cutoff_params = self.config["dataset"].get(
-                "cutoff_params", {"cutoff_func": "Cosine"}
-            )
-            descriptor_setup = (
-                self.fp_scheme,
-                self.fp_params,
-                self.cutoff_params,
-                self.elements,
-            )
-            self.train_dataset = AtomsDataset(
-                images=training_images,
-                descriptor_setup=descriptor_setup,
-                forcetraining=self.forcetraining,
-                pca_reduce = self.pca_reduce,
-                pca_setting = self.config["dataset"].get(
-                    "pca_setting",
-                    {"num_pc": 20, "elementwise": False, "normalize": False}
-                ),
-                save_fps=self.config["dataset"].get("save_fps", True),
-                scaling=self.config["dataset"].get(
-                    "scaling",
-                    {"type": "normalize", "range": (0, 1), "elementwise": True},
-                ),
-            )
->>>>>>> 0b38ea9decb36f6ec6f227eb0c1ae528bb6c4cd9
         self.feature_scaler = self.train_dataset.feature_scaler
         self.target_scaler = self.train_dataset.target_scaler
         # if self.pca_reduce:
