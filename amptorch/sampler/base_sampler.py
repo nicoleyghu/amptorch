@@ -19,7 +19,7 @@ class BaseSampler(ABC):
         self.data_list = [self.data_list[_] for _ in self.image_indices]
 
     def save_sampled_indices(self):
-        filename = self.sampled_indices_directory + "/" + self.sampler_setup_hash
+        filename = self.sampled_indices_directory + "/" + self.sampler_setup_hash + ".pkl"
         
         # if dir not exist, make dir
         if os.path.isdir(self.sampled_indices_directory) is False:
@@ -33,8 +33,8 @@ class BaseSampler(ABC):
         # filename = "processed/samplers/[images_hash]/[descriptor_setup_hash]/[sampler_setup_hash]"
 
         _dir = "/".join([self.sampling_method, self.images_hash])
-        self.sampled_indices_directory = "./processed/samplers/" + _dir
-        filename = self.sampled_indices_directory  + "/" + self.sampler_setup_hash
+        self.sampled_indices_directory = "processed/samplers/" + _dir
+        filename = self.sampled_indices_directory  + "/" + self.sampler_setup_hash + ".pkl"
 
         # check for file existence and 
         if os.path.isfile(filename): 
@@ -45,6 +45,7 @@ class BaseSampler(ABC):
         else: 
             print("Sampling...")
             self.sampling_procedure()
+            self.save_config()
 
     def get_images_hash(self):
         string = str(self.images)

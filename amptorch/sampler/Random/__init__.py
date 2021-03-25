@@ -49,3 +49,6 @@ class Random(BaseSampler):
         md5 = hashlib.md5(string.encode("utf-8"))
         hash_result = md5.hexdigest()
         self.sampler_setup_hash = hash_result
+    
+    def save_config(self):
+        pass

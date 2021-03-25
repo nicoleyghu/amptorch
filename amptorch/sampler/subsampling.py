@@ -399,7 +399,7 @@ def subsampling_with_PCA(
         if sum_explained_variance > target_variance:
             keep_going = False
 
-        if trial_component > max_component:
+        if trial_component >= max_component:
             keep_going = False
             if verbose >= 2:
                 print(
@@ -432,7 +432,14 @@ def subsampling_with_PCA(
 
     sampling_result = [data_pca[i] for i in overall_keep_list]
     image_index_result = [image_index[i] for i in overall_keep_list]
-    return sampling_result, image_index_result
+    dict_result = {
+        "sampling_restult": sampling_result,
+        "image_index_result": image_index_result,
+        "explained_variance": sum_explained_variance,
+        "num_PC_kept": trial_component,
+
+    }
+    return dict_result
 
 
 def batch_subsampling(

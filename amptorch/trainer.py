@@ -253,6 +253,7 @@ class AtomsTrainer:
         self.net.fit(self.train_dataset, None)
         elapsed_time = time.time() - stime
         print(f"Training completed in {elapsed_time}s")
+        return elapsed_time
 
     def predict(self, images, batch_size=32):
         if len(images) < 1:
@@ -323,7 +324,8 @@ class AtomsTrainer:
             normalizers = torch.load(os.path.join(checkpoint_path, "normalizers.pt"))
             self.feature_scaler = normalizers["feature"]
             self.target_scaler = normalizers["target"]
-            if self.config["dataset"].get("pca_reduce", False):
+            self.pca_reduce = self.config["dataset"].get("pca_reduce", False)
+            if self.pca_reduce:
                 self.pca_reducer = torch.load(os.path.join(checkpoint_path, "pca_reducer.pt"))
         except NotImplementedError:
             print("Unable to load checkpoint!")
