@@ -1,5 +1,6 @@
 from ..base_sampler import BaseSampler
 import hashlib
+from .random import getIndicesfromRandom
 import random
 
 class Random(BaseSampler):
@@ -31,11 +32,7 @@ class Random(BaseSampler):
             length = int(total_length * param)
         else:
             length = param
-        image_indices = random.sample(range(0, total_length), length)
-        image_indices = list(set(image_indices))
-        while len(image_indices) < length:
-            image_indices.append(random.randint(0, total_length))
-            image_indices = list(set(image_indices))
+        image_indices = getIndicesfromRandom(length, total_length)
         self.image_indices = image_indices
         self.update_data_list()
 

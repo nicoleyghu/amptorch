@@ -1,5 +1,6 @@
 from ..base_sampler import BaseSampler
-from ..subsampling import subsampling, subsampling_with_PCA
+from ..subsampling import subsampling_with_PCA
+from ..Random.random import getIndicesfromRandom
 
 import hashlib
 import numpy as np
@@ -7,96 +8,42 @@ import json
 import os
 import time
 
-
-class NearestNeighbor(BaseSampler):
+class NNSRSHybrid(BaseSampler):
     def __init__(self, data_list, sampling_params, images, descriptor_setup_hash, save=False):
         super().__init__()
         self.data_list = data_list
-        self.sampling_method = "nns"
+        self.sampling_method = "hybrid"
         self.sampling_params = sampling_params
         self.images = images
         self.descriptor_setup_hash = descriptor_setup_hash
         self.save = save
 
-        # NNS parameters
         self.cutoff = self.sampling_params.get("cutoff")
         self.rate = self.sampling_params.get("rate")
         self.method = self.sampling_params.get("method", "pykdtree")
         self.start_trial_component = self.sampling_params.get("start_trial_component", 10)
         self.max_component = self.sampling_params.get("max_component", 30)
         self.target_variance = self.sampling_params.get("target_variance", 0.999999)
-        self.image_wise_sampling = self.sampling_params.get("imagewise_sampling", False)
+        self.random_ratio = self.sampling_params.get("random_ratio", 0.5)
 
-        # get hash to log the subsampled indices
         self.get_images_hash()
         self.get_sampler_setup_hash()
 
-        # subsample
         self.load_or_sample()
         if save:
             self.save_sampled_indices()
 
     def sampling_procedure(self):
-        if self.image_wise_sampling is False:
-            t0 = time.time()
-            self.prepare_descriptors()
+        self.prepare_descriptors()
 
-            total_length = len(self.data_list)
-            print("Before sampling: {} images.".format(total_length))
+        total_length = len(self.data_list)
+        print("Before sampling: {} images.".format(total_length))
 
-            dict_results = subsampling_with_PCA(
-                self.fps_array,
-                image_index=self.index_list, 
-                cutoff_sig=self.cutoff,
-                rate = self.rate,
-                start_trial_component=self.start_trial_component,
-                max_component=self.max_component,
-                target_variance=self.target_variance,
-                method = self.method,
-                verbose=2
-            )
-            self.sampling_time = time.time() - t0
-
-            self.dict_results = dict_results
-        else:
-            t0 = time.time()
-            dict_results = self.imagewise_routine()
-            self.sampling_time = time.time() - t0
-            self.dict_results = dict_results
-        
-        self.image_indices = list(set(dict_results["image_index_result"]))
-        self.update_data_list()
-
-        print("After sampling: {} images.".format(len(self.data_list)))
-    
-    def imagewise_routine(self):
-        
-        print("Image-wise sampling")
-        imagewise_fps_list = []
-        imagewise_index_list = []
-        # iterate through every image and subsampling
-        for i, _data in enumerate(self.data_list):
-            image_fps_array = _data.fingerprint.tolist()
-            print(len(image_fps_array[0]))
-            _image_index_list = [i] * len(image_fps_array)
-            _dict_results = subsampling(
-                image_fps_array,
-                image_index=_image_index_list, 
-                cutoff_sig=self.cutoff,
-                rate = self.rate,
-                method = self.method,
-                verbose=2
-            )
-            image_fps_array = _dict_results["sampling_restult"]
-            for _fps in image_fps_array:
-                imagewise_fps_list.append(_fps)
-            print("Image {}: {}".format(i, len(image_fps_array)))
-            imagewise_index_list.extend([i] * len(image_fps_array))
-        
-        # subsample on the list of arrays 
+        t0 = time.time()
+        # NNS sampling
         dict_results = subsampling_with_PCA(
-            imagewise_fps_list,
-            image_index=imagewise_index_list, 
+            self.fps_array,
+            image_index=self.index_list, 
             cutoff_sig=self.cutoff,
             rate = self.rate,
             start_trial_component=self.start_trial_component,
@@ -105,8 +52,23 @@ class NearestNeighbor(BaseSampler):
             method = self.method,
             verbose=2
         )
-        return dict_results
+        
+        nns_indices = list(set(dict_results["image_index_result"]))
+        self.dict_results = dict_results
 
+        # random sampling to add on more points
+        length = int(len(nns_indices) / (1 - self.random_ratio)) # length for total results
+        if length > total_length:
+            self.image_indices = list(range(0, total_length))
+        else: 
+            rs_indices = getIndicesfromRandom(length, total_length, existing_list_of_indices=nns_indices)
+            self.image_indices = rs_indices
+
+        self.sampling_time = time.time() - t0
+        self.update_data_list()
+
+        print("After sampling: {} images.".format(len(self.data_list)))
+    
     def get_sampler_setup_hash(self):
         string = ""
         sampler_setup = [
@@ -116,7 +78,7 @@ class NearestNeighbor(BaseSampler):
             self.max_component,
             self.target_variance,
             self.method,
-            self.image_wise_sampling
+            self.random_ratio,
             ]
         for _ in sampler_setup:
             if type(_) is not str:
@@ -142,6 +104,7 @@ class NearestNeighbor(BaseSampler):
                     "start_trial_component": self.start_trial_component,
                     "max_component": self.max_component,
                     "target_variance": self.target_variance, 
+                    "random_ratio": self.random_ratio, 
                 },
                 "PCA_results":
                 {

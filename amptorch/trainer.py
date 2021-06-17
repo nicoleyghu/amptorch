@@ -105,7 +105,7 @@ class AtomsTrainer:
             self.cutoff_params,
             self.elements,
         )
-        
+         
         self.sampling = self.config["dataset"].get("sampling", None)
 
         self.train_dataset = AtomsDataset(

@@ -13,6 +13,7 @@ from amptorch.preprocessing import (
 
 from amptorch.sampler.NearestNeighbor import NearestNeighbor
 from amptorch.sampler.Random import Random
+from amptorch.sampler.Hybrid import NNSRSHybrid
 
 class AtomsDataset(Dataset):
     def __init__(
@@ -22,7 +23,7 @@ class AtomsDataset(Dataset):
         forcetraining=True,
         pca_reduce = False,
         pca_setting = {"num_pc": 20, "elementwise": False, "normalize": False},
-        sampling = {"sampling_method": None, "sampling_params": None},
+        sampling = None,
         save_fps=True,
         scaling={"type": "normalize", "range": (0, 1)},
         cores=1,
@@ -48,9 +49,9 @@ class AtomsDataset(Dataset):
         self.data_list = self.process() if process else None
         # sampling
         if self.sampling is not None:
-            sampling_method = sampling.get("sampling_method", None)
-            sampling_params = sampling.get("sampling_params", None)
-            sampling_save = sampling.get("save", False)
+            sampling_method = self.sampling.get("sampling_method")
+            sampling_params = self.sampling.get("sampling_params")
+            sampling_save = self.sampling.get("save", False)
             if sampling_method == "random":
                 self.data_list = \
                     Random(self.data_list, sampling_params, \
@@ -61,10 +62,14 @@ class AtomsDataset(Dataset):
                     NearestNeighbor(self.data_list, sampling_params, \
                         self.images, descriptor_setup, \
                         save=sampling_save).run()
+            elif sampling_method == "hybrid":
+                self.data_list = \
+                    NNSRSHybrid(self.data_list, sampling_params, \
+                        self.images, descriptor_setup, \
+                        save=sampling_save).run()
             else:
                 raise NotImplementedError
             
-
     def process(self):
         data_list = self.a2d.convert_all(self.images)
 

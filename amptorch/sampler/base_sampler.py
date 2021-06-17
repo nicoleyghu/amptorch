@@ -4,6 +4,9 @@ import os
 import pickle
 
 class BaseSampler(ABC):
+    """
+    This abtract class serves as a base sampler. 
+    """
     def __init__(self):
         super().__init__()
 

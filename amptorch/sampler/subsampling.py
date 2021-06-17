@@ -96,6 +96,8 @@ def get_subsampling_index2(
     method="pykdtree",
     verbose=1,
     image_index=[],
+    critical_percent=5,
+    max_consecutive_count=3,
 ):
 
     """
@@ -114,6 +116,7 @@ def get_subsampling_index2(
     -------------
     overall_keep_list: The list of indices of the final subsampled entries
     """
+    critical_percent /= 100 # convert to fraction
 
     if verbose >= 1:
         print("Started NN-subsampling, original length: {}".format(len(data_process)))
@@ -164,6 +167,7 @@ def get_subsampling_index2(
     # initialize the index
     overall_keep_list = np.arange(len(data_process)).tolist()
 
+    consecutive_count = 0
     keep_going = True
     iter_count = 1
     while keep_going:
@@ -247,12 +251,21 @@ def get_subsampling_index2(
 
         temp_keep_list = remove_list_from_list(index_li, remove_index_li)
         overall_keep_list = [overall_keep_list[i] for i in temp_keep_list]
+        overall_keep_list_set_len = len(list(set(overall_keep_list)))
+
+        # stopping criterion
         try:
-            if len(overall_keep_list) == old_overall_keep_list_len:
+            if (overall_keep_list_set_len - old_overall_keep_list_set_len) / old_overall_keep_list_set_len < critical_percent:
+                consecutive_count += 1
+            if (overall_keep_list_set_len) == old_overall_keep_list_set_len:
                 keep_going = False
-                print("stopped because length didn't change")
         except:
             pass
+        
+        if consecutive_count >= max_consecutive_count:
+            print("stopped due to similar lengths of subsampled images")
+            keep_going = False
+
         if verbose >= 2:
             print(
                 "end iteration {}. length: {}\t time:{}".format(
@@ -260,7 +273,7 @@ def get_subsampling_index2(
                 )
             )
         iter_count += 1
-        old_overall_keep_list_len = len(overall_keep_list)
+        old_overall_keep_list_set_len = len(list(set(overall_keep_list)))
     if verbose >= 1:
         print(
             "end NN-subsampling. length: {}\t time:{}".format(
@@ -320,7 +333,12 @@ def subsampling(
     )
     sampling_result = [data[i] for i in overall_keep_list]
     image_index_result = [image_index[i] for i in overall_keep_list]
-    return sampling_result, image_index_result
+    dict_result = {
+        "sampling_restult": sampling_result,
+        "image_index_result": image_index_result,
+    }
+    
+    return dict_result
 
 
 def subsampling_with_PCA(
@@ -380,6 +398,14 @@ def subsampling_with_PCA(
     start = time.time()
     pca = PCA(svd_solver="randomized")
     data_pca = pca.fit_transform(data)
+    
+    # import pickle
+    # with open("../../data/train_fps_pca.pkl", "bw") as f:
+    #     pickle.dump(data_pca, f)
+
+    # raise Exception()
+    
+    
     explained_variance_ratio = pca.explained_variance_ratio_
 
     # determine how many PCs to be kept
