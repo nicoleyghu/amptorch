@@ -65,7 +65,10 @@ class NearestNeighbor(BaseSampler):
             self.dict_results = dict_results
         
         self.image_indices = list(set(dict_results["image_index_result"]))
-        self.update_data_list()
+        if len(self.image_indices) == total_length:
+            pass
+        else:
+            self.update_data_list()
 
         print("After sampling: {} images.".format(len(self.data_list)))
     
@@ -150,7 +153,7 @@ class NearestNeighbor(BaseSampler):
                 },
                 "sampling_results":
                 {
-                    "idnex_file": self.sampled_indices_directory + "/" + self.sampler_setup_hash + ".pkl",
+                    "index_file": self.sampled_indices_directory + "/" + self.sampler_setup_hash + ".pkl",
                     "sampled_images": len(self.image_indices),
                     "sampling_time": self.sampling_time
                 }

@@ -26,15 +26,19 @@ class Random(BaseSampler):
         param = self.sampling_params.get("length")
         total_length = len(self.data_list)
         print("Before sampling: {}".format(total_length))
-        # if registered as a fraction, then default to a fraction of 
-        # total training data
-        if param < 1:
-            length = int(total_length * param)
+        if total_length == param:
+            self.image_indices = list(range(0, total_length))
+            # do not udpate data_list
         else:
-            length = param
-        image_indices = getIndicesfromRandom(length, total_length)
-        self.image_indices = image_indices
-        self.update_data_list()
+            # if registered as a fraction, then default to a fraction of 
+            # total training data
+            if param < 1:
+                length = int(total_length * param)
+            else:
+                length = param
+            image_indices = getIndicesfromRandom(length, total_length)
+            self.image_indices = image_indices
+            self.update_data_list()
 
         print("After sampling: {}".format(len(self.data_list)))
 
